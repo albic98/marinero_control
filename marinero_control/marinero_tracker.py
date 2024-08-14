@@ -11,7 +11,7 @@ class MarineroMarker(Node):
         super().__init__("marinero_marker")
         self.odom_sub = self.create_subscription(Odometry, '/marinero/odom', self.location_callback, 10)
         self.marinero_publisher = self.create_publisher(MarkerArray, '/marinero_tracker', 10)
-        self.marker_timer = self.create_timer(0.025, self.publish_markers)
+        self.marker_timer = self.create_timer(0.05, self.publish_markers)
         self.position = (0.0, 0.0)
         self.orientation = Quaternion(x=0.0, y=0.0, z=0.0, w=1.0)
         

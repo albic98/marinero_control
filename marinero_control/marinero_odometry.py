@@ -23,7 +23,7 @@ class OdometryPublisher(Node):
         self.pos_subscriber = self.create_subscription(Float64MultiArray, '/forward_position_controller/commands', self.position_callback,10)
         self.vel_subscriber = self.create_subscription(Float64MultiArray, '/forward_velocity_controller/commands', self.velocity_callback,10)
         
-        self.broadcaster_timer = self.create_timer(0.005, self.odometry_broadcaster)
+        self.broadcaster_timer = self.create_timer(0.05, self.odometry_broadcaster)
         
     def position_callback(self, msg):
         self.axle_positions = np.array(msg.data[0:4])
