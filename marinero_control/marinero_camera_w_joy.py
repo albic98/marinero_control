@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import sys
 import rclpy
 import math
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
