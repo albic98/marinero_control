@@ -15,27 +15,27 @@ camera_base_turn, camera_turn = [0.0, 0.0]
 class Commander(Node):
 
     def __init__(self):
-        super().__init__('commander')
+        super().__init__("commander")
         timer_period = 0.015
         self.wheel_seperation = 0.425
         self.wheel_base = 0.8
         self.wheel_radius = 0.1016
         self.wheel_steering_y_offset = 0.0
         self.steering_track = self.wheel_seperation - 2*self.wheel_steering_y_offset
-        self.scale_linear_x = self.declare_parameter('scale_linear_x', 10).value
-        self.scale_linear_y = self.declare_parameter('scale_linear_y', 8).value
-        self.scale_linear_turbo = self.declare_parameter('scale_linear_turbo', 20).value
-        self.scale_angular_z = self.declare_parameter('scale_angular_z', 8).value
-        self.scale_angular = self.declare_parameter('scale_angular', 0.015).value
+        self.scale_linear_x = self.declare_parameter("scale_linear_x", 10).value
+        self.scale_linear_y = self.declare_parameter("scale_linear_y", 8).value
+        self.scale_linear_turbo = self.declare_parameter("scale_linear_turbo", 20).value
+        self.scale_angular_z = self.declare_parameter("scale_angular_z", 8).value
+        self.scale_angular = self.declare_parameter("scale_angular", 0.015).value
         
         self.pos = np.array([0,0,0,0,0,1.5,1.5], float)
         self.vel = np.array([0,0,0,0], float)               # left_front, right_front, left_rear, right_rear
         self.target_pos = np.array([0,0,0,0], float)        # target positions for the wheels when the robot is standing still
 
-        self.cmd_publisher = self.create_publisher(Twist, '/fcc/cmd_vel', 10)
-        self.joy_subscription = self.create_subscription(Joy, '/joy', self.joy_callback, 10)
-        self.pub_pos = self.create_publisher(Float64MultiArray, '/forward_position_controller/commands', 10)
-        self.pub_vel = self.create_publisher(Float64MultiArray, '/forward_velocity_controller/commands', 10)
+        self.cmd_publisher = self.create_publisher(Twist, "/fcc/cmd_vel", 10)
+        self.joy_subscription = self.create_subscription(Joy, "/joy", self.joy_callback, 10)
+        self.pub_pos = self.create_publisher(Float64MultiArray, "/forward_position_controller/commands", 10)
+        self.pub_vel = self.create_publisher(Float64MultiArray, "/forward_velocity_controller/commands", 10)
         
         self.command_timer = self.create_timer(timer_period, self.timer_callback)
 
@@ -173,6 +173,6 @@ def main(args=None):
     commander.destroy_node()
     rclpy.shutdown()
     
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
 

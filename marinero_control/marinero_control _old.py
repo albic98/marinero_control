@@ -18,7 +18,7 @@ camera_base_turn, camera_turn = [0.0, 0.0]
 class Commander(Node):
 
     def __init__(self):
-        super().__init__('commander')
+        super().__init__("commander")
         timer_period = 0.02
         self.wheel_seperation = 0.425
         self.wheel_base = 0.8
@@ -30,10 +30,10 @@ class Commander(Node):
         self.vel = np.array([0,0,0,0], float)               # left_front, right_front, left_rear, right_rear
         self.target_pos = np.array([0,0,0,0], float)        # target positions for the wheels when the robot is standing still
 
-        self.pub_pos = self.create_publisher(Float64MultiArray, '/forward_position_controller/commands', 10)
-        self.pub_vel = self.create_publisher(Float64MultiArray, '/forward_velocity_controller/commands', 10)
+        self.pub_pos = self.create_publisher(Float64MultiArray, "/forward_position_controller/commands", 10)
+        self.pub_vel = self.create_publisher(Float64MultiArray, "/forward_velocity_controller/commands", 10)
         
-        self.joint_names = ['camera_base_joint', 'left_camera_joint', 'right_camera_joint']
+        self.joint_names = ["camera_base_joint", "left_camera_joint", "right_camera_joint"]
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
     def timer_callback(self):
@@ -133,11 +133,11 @@ class Commander(Node):
 class JoySubscriber(Node):
 
     def __init__(self):
-        super().__init__('joy_subscriber')
-        self.scale_angular = self.declare_parameter('scale_angular', 0.025).value
+        super().__init__("joy_subscriber")
+        self.scale_angular = self.declare_parameter("scale_angular", 0.025).value
         
-        self.cmd_publisher = self.create_publisher(Twist, '/cmd_vel', 10)
-        self.joy_subscription = self.create_subscription(Joy, '/joy', self.listener_callback, 10)
+        self.cmd_publisher = self.create_publisher(Twist, "/cmd_vel", 10)
+        self.joy_subscription = self.create_subscription(Joy, "/joy", self.listener_callback, 10)
         self.joy_subscription
 
     def listener_callback(self, data):
@@ -190,6 +190,6 @@ def main(args=None):
     rclpy.shutdown()
     executor_thread.join()
     
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
 

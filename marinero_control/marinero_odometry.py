@@ -13,15 +13,15 @@ from std_msgs.msg import Float64MultiArray
 class OdometryPublisher(Node):
 
     def __init__(self):
-        super().__init__('odometry_listener')
+        super().__init__("odometry_listener")
         self.tf_broadcaster = TransformBroadcaster(self)
         self.axle_positions = np.zeros(4)
         self.camera_positions = np.zeros(3)
         self.transforms = []
         
-        self.odom_subscriber = self.create_subscription(Odometry, '/marinero/odom', self.odometry_callback, 50)
-        self.pos_subscriber = self.create_subscription(Float64MultiArray, '/forward_position_controller/commands', self.position_callback,10)
-        self.vel_subscriber = self.create_subscription(Float64MultiArray, '/forward_velocity_controller/commands', self.velocity_callback,10)
+        self.odom_subscriber = self.create_subscription(Odometry, "/marinero/odom", self.odometry_callback, 50)
+        self.pos_subscriber = self.create_subscription(Float64MultiArray, "/forward_position_controller/commands", self.position_callback,10)
+        self.vel_subscriber = self.create_subscription(Float64MultiArray, "/forward_velocity_controller/commands", self.velocity_callback,10)
         
         self.broadcaster_timer = self.create_timer(0.02, self.odometry_broadcaster)
         
@@ -38,8 +38,8 @@ class OdometryPublisher(Node):
         # Create a TransformStamped message
         odom_to_base_link = TransformStamped()
         odom_to_base_link.header.stamp = current_time
-        odom_to_base_link.header.frame_id = 'odom'
-        odom_to_base_link.child_frame_id = 'base_link'
+        odom_to_base_link.header.frame_id = "odom"
+        odom_to_base_link.child_frame_id = "base_link"
         odom_to_base_link.transform.translation.x = msg.pose.pose.position.x
         odom_to_base_link.transform.translation.y = msg.pose.pose.position.y
         odom_to_base_link.transform.translation.z = msg.pose.pose.position.z
@@ -50,16 +50,16 @@ class OdometryPublisher(Node):
 
         ## AXLE TRANSFORMS ##
         axles = [
-            ('fl_axle_link', 0.4, 0.2125, 0.1016, self.axle_positions[1]),
-            ('fr_axle_link', 0.4, -0.2125, 0.1016, self.axle_positions[0]),
-            ('rl_axle_link', -0.4, 0.2125, 0.1016, self.axle_positions[3]),
-            ('rr_axle_link', -0.4, -0.2125, 0.1016, self.axle_positions[2])
+            ("fl_axle_link", 0.4, 0.2125, 0.1016, self.axle_positions[1]),
+            ("fr_axle_link", 0.4, -0.2125, 0.1016, self.axle_positions[0]),
+            ("rl_axle_link", -0.4, 0.2125, 0.1016, self.axle_positions[3]),
+            ("rr_axle_link", -0.4, -0.2125, 0.1016, self.axle_positions[2])
         ]
 
         for child_frame_id, x, y, z, yaw in axles:
             transform = TransformStamped()
             transform.header.stamp = current_time
-            transform.header.frame_id = 'base_link'
+            transform.header.frame_id = "base_link"
             transform.child_frame_id = child_frame_id
             transform.transform.translation.x = x
             transform.transform.translation.y = y
@@ -71,10 +71,10 @@ class OdometryPublisher(Node):
 
         ## WHEEL TRANSFORMS ##
         wheels = [
-            ('fl_wheel', 'fl_axle_link', -math.pi/2),
-            ('fr_wheel', 'fr_axle_link', math.pi/2),
-            ('rl_wheel', 'rl_axle_link', -math.pi/2),
-            ('rr_wheel', 'rr_axle_link', math.pi/2)
+            ("fl_wheel", "fl_axle_link", -math.pi/2),
+            ("fr_wheel", "fr_axle_link", math.pi/2),
+            ("rl_wheel", "rl_axle_link", -math.pi/2),
+            ("rr_wheel", "rr_axle_link", math.pi/2)
         ]
 
         for child_frame_id, parent_frame_id, roll in wheels:
@@ -92,11 +92,11 @@ class OdometryPublisher(Node):
         
         ## CAMERA TRANSFORMS ##
         cameras = [
-            ('camera_base', 'chassis', 0.0, -0.2375, 0.43, 0.0, 0.0, -math.pi/2 - self.camera_positions[0]),
-            ('left_camera_link', 'camera_base', 0.0, 0.0515, 0.1105, self.camera_positions[1], 0.0, math.pi/2),
-            ('right_camera_link', 'camera_base', 0.0, -0.05, 0.1105, self.camera_positions[2], 0.0, math.pi/2),
-            ('right_camera_depth_frame', 'right_camera_link', -0.09, 0.0, 0.065, 0.0, 0.0, -math.pi),
-            ('left_camera_depth_frame', 'left_camera_link', 0.09, 0.01, 0.06, 0.0, 0.0, -math.pi)
+            ("camera_base", "chassis", 0.0, -0.2375, 0.43, 0.0, 0.0, -math.pi/2 - self.camera_positions[0]),
+            ("left_camera_link", "camera_base", 0.0, 0.0515, 0.1105, self.camera_positions[1], 0.0, math.pi/2),
+            ("right_camera_link", "camera_base", 0.0, -0.05, 0.1105, self.camera_positions[2], 0.0, math.pi/2),
+            ("right_camera_depth_frame", "right_camera_link", -0.09, 0.0, 0.065, 0.0, 0.0, -math.pi),
+            ("left_camera_depth_frame", "left_camera_link", 0.09, 0.01, 0.06, 0.0, 0.0, -math.pi)
         ]
 
         for child_frame_id, parent_frame_id, x, y, z, roll, pitch, yaw in cameras:
@@ -129,5 +129,5 @@ def main(args=None):
     node.destroy_node()
     rclpy.shutdown()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

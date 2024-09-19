@@ -32,7 +32,7 @@ class Camera(Node):
     #         for name, position in zip(self.message.name, self.message.position):
     #             if name in self.current_positions:
     #                 self.current_positions[name] = position
-    #         self.get_logger().info(f'Trenutne pozicije: {self.current_positions}') 
+    #         self.get_logger().info(f"Trenutne pozicije: {self.current_positions}") 
 
     def joint_pose_publisher(self):
         msg = JointTrajectory()
@@ -46,8 +46,8 @@ class Camera(Node):
         msg.points = [point]
         
         self.camera_pose_publisher.publish(msg)
-        # self.get_logger().info(f'Objava "JointTrajectory" poruke: {msg}')
-        self.get_logger().info(f'Postavljene pozicije: {self.cam_base, self.l_cam, self.r_cam}')
+        # self.get_logger().info(f"Objava "JointTrajectory" poruke: {msg}")
+        self.get_logger().info(f"Postavljene pozicije: {self.cam_base, self.l_cam, self.r_cam}")
         
 
 def main(args=None):

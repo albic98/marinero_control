@@ -9,9 +9,9 @@ from nav_msgs.msg import Odometry
 class MarineroMarker(Node):
     def __init__(self):
         super().__init__("marinero_marker")
-        self.odom_sub = self.create_subscription(Odometry, '/marinero/odom', self.location_callback, 10)
-        self.marinero_publisher = self.create_publisher(MarkerArray, '/marinero_tracker', 10)
-        self.marker_timer = self.create_timer(0.1, self.publish_markers)
+        self.odom_sub = self.create_subscription(Odometry, "/marinero/odom", self.location_callback, 10)
+        self.marinero_publisher = self.create_publisher(MarkerArray, "/marinero_tracker", 10)
+        self.marker_timer = self.create_timer(0.25, self.publish_markers)
         self.position = (0.0, 0.0)
         self.orientation = Quaternion(x=0.0, y=0.0, z=0.0, w=1.0)
 
@@ -29,7 +29,7 @@ class MarineroMarker(Node):
         
     def create_marker_line(self, point1, point2):
         marker_line = Marker()
-        marker_line.header.frame_id = 'odom'
+        marker_line.header.frame_id = "odom"
         marker_line.type = Marker.LINE_STRIP
         marker_line.action = Marker.ADD
         # marker_line.points = [point1, point2]
@@ -42,7 +42,7 @@ class MarineroMarker(Node):
     
     def create_marker_sphere(self, point):
         marker_sphere = Marker()
-        marker_sphere.header.frame_id = 'odom'
+        marker_sphere.header.frame_id = "odom"
         marker_sphere.type = Marker.SPHERE
         marker_sphere.action = Marker.ADD
         # marker_sphere.pose.position = point
@@ -58,7 +58,7 @@ class MarineroMarker(Node):
     
     def create_marker_arrow(self, point):
         marker_arrow = Marker()
-        marker_arrow.header.frame_id = 'odom'
+        marker_arrow.header.frame_id = "odom"
         marker_arrow.type = Marker.ARROW
         marker_arrow.action = Marker.ADD
         # marker_arrow.pose.position = point
