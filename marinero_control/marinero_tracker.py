@@ -3,7 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from visualization_msgs.msg import Marker, MarkerArray
-from geometry_msgs.msg import Point, Quaternion
+from geometry_msgs.msg import Point, Quaternion, PoseStamped
 from nav_msgs.msg import Odometry
 
 class MarineroMarker(Node):
@@ -11,7 +11,8 @@ class MarineroMarker(Node):
         super().__init__("marinero_marker")
         self.odom_sub = self.create_subscription(Odometry, "/marinero/odom", self.location_callback, 10)
         self.marinero_publisher = self.create_publisher(MarkerArray, "/marinero_tracker", 10)
-        self.marker_timer = self.create_timer(0.25, self.publish_markers)
+        self.pose_publisher = self.create_publisher(PoseStamped, '/robot_pose', 10)
+        self.marker_timer = self.create_timer(0.5, self.publish_markers)
         self.position = (0.0, 0.0)
         self.orientation = Quaternion(x=0.0, y=0.0, z=0.0, w=1.0)
 
@@ -22,10 +23,18 @@ class MarineroMarker(Node):
         
         # Counter for throttling publishing
         self.counter = 0
-        
+    
     def location_callback(self, msg):
         self.position = (msg.pose.pose.position.x, msg.pose.pose.position.y)
+        self.height = msg.pose.pose.position.z
         self.orientation = msg.pose.pose.orientation
+        
+        self.pose = PoseStamped()
+        self.pose.header.frame_id = "base_link"
+        self.pose.pose.position.x = self.position[0]
+        self.pose.pose.position.y = self.position[1]
+        self.pose.pose.position.z = self.height
+        self.pose_publisher.publish(self.pose)
         
     def create_marker_line(self, point1, point2):
         marker_line = Marker()
@@ -102,7 +111,7 @@ class MarineroMarker(Node):
         marker_array.markers.append(self.marker_arrow)
         
         # Publish the MarkerArray
-        self.marinero_publisher.publish(marker_array) 
+        self.marinero_publisher.publish(marker_array)
         
 def main(args=None):
     

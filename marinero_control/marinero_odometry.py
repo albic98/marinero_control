@@ -23,7 +23,7 @@ class OdometryPublisher(Node):
         self.pos_subscriber = self.create_subscription(Float64MultiArray, "/forward_position_controller/commands", self.position_callback,10)
         self.vel_subscriber = self.create_subscription(Float64MultiArray, "/forward_velocity_controller/commands", self.velocity_callback,10)
         
-        self.broadcaster_timer = self.create_timer(0.02, self.odometry_broadcaster)
+        self.broadcaster_timer = self.create_timer(0.25, self.odometry_broadcaster)
         
     def position_callback(self, msg):
         self.axle_positions = np.array(msg.data[:4])
@@ -87,7 +87,7 @@ class OdometryPublisher(Node):
             transform.transform.translation.z = 0.0
             quat = quaternion_from_euler(roll, 0.0, 0.0)
             transform.transform.rotation = Quaternion(x=quat[0], y=quat[1], z=quat[2], w=quat[3])
-            # transforms.append(transform)
+            transforms.append(transform)
             
         
         ## CAMERA TRANSFORMS ##
@@ -112,21 +112,18 @@ class OdometryPublisher(Node):
             transforms.append(transform)
             
         self.transforms = transforms
-
+        
     def odometry_broadcaster(self):
         # Broadcast all transforms at once
         for transform in self.transforms:
             self.tf_broadcaster.sendTransform(transform)
         
 def main(args=None):
-    rclpy.init(args=args)
-    node = OdometryPublisher()
     
-    # Spinning once with a small timeout for real-time responsiveness
-    while rclpy.ok():
-        rclpy.spin_once(node, timeout_sec=0.01)
-        
-    node.destroy_node()
+    rclpy.init(args=args)
+    odometry_node = OdometryPublisher()
+    rclpy.spin(odometry_node)
+    odometry_node.destroy_node()
     rclpy.shutdown()
 
 if __name__ == "__main__":

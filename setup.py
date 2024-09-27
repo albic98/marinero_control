@@ -22,6 +22,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'gazebo_marker = marinero_control.gazebo_marker:main',
             'marinero_control = marinero_control.marinero_control:main',
             'marinero_control_old = marinero_control.marinero_control_old:main',
             'marinero_yolo = marinero_control.marinero_yolo:main',
