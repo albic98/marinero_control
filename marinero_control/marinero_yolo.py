@@ -59,10 +59,10 @@ class ImageProcessing(Node):
                         color = self.colors[class_name]
                         yolo_box = int(x-w/2), int(y-h/2), int(w), int(h)
                         # self.get_logger().info(f"{class_name} : {yolo_box[0]}, {yolo_box[1]}, {yolo_box[0] + yolo_box[2]}, {yolo_box[1] + yolo_box[3]}\n")
-                        cv2.rectangle(self.frame,(yolo_box[0],yolo_box[1]), (yolo_box[0] + yolo_box[2], yolo_box[1] + yolo_box[3]),color,6)
+                        cv2.rectangle(self.frame,(yolo_box[0],yolo_box[1]), (yolo_box[0] + yolo_box[2], yolo_box[1] + yolo_box[3]),color, 2)
 
                         label = f"{class_name} {confidence*100:.1f}%"
-                        (label_width, label_height), baseline = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)
+                        (label_width, label_height), baseline = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 1)
                         
                         label_background_top_left = (yolo_box[0], yolo_box[1] - label_height - baseline)
                         label_background_bottom_right = (yolo_box[0] + label_width, yolo_box[1])

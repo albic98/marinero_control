@@ -89,7 +89,6 @@ class MarkerSpawner(Node):
     #     except Exception as e:
     #         self.get_logger().error(f"Service call failed: {str(e)}")
 
-
 def main(args=None):
     rclpy.init(args=args)
     node = MarkerSpawner()
