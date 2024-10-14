@@ -34,6 +34,7 @@ class MarineroMarker(Node):
         self.pose.pose.position.x = self.position[0]
         self.pose.pose.position.y = self.position[1]
         self.pose.pose.position.z = self.height
+        self.pose.pose.orientation = self.orientation
         self.pose_publisher.publish(self.pose)
         
     def create_marker_line(self, point1, point2):

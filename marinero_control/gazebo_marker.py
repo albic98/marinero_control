@@ -1,5 +1,6 @@
 #usr/bin/env python3
 
+import time
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import PoseStamped
@@ -41,6 +42,7 @@ class MarkerSpawner(Node):
         marker_request.initial_pose.position.x = self.robot_pose.pose.position.x
         marker_request.initial_pose.position.y = self.robot_pose.pose.position.y
         marker_request.initial_pose.position.z = self.robot_pose.pose.position.z + 0.55
+        marker_request.initial_pose.orientation = self.robot_pose.pose.orientation
 
         future = self.marker_client.call_async(marker_request)
         future.add_done_callback(self.spawn_marker_response_callback)
@@ -66,13 +68,15 @@ class MarkerSpawner(Node):
                 self.spawn_marker()
         else:
             self.update_marker_position()
-            
+
     def update_marker_position(self):
         marker_state = EntityState()
         marker_state.name = self.marker_name
         marker_state.pose.position.x = self.robot_pose.pose.position.x
         marker_state.pose.position.y = self.robot_pose.pose.position.y
         marker_state.pose.position.z = self.robot_pose.pose.position.z + 0.55
+        marker_state.pose.orientation = self.robot_pose.pose.orientation
+        
 
         state_request = SetEntityState.Request()
         state_request.state = marker_state
