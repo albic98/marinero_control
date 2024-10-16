@@ -3,7 +3,7 @@
 import time
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import PoseStamped
+from nav_msgs.msg import Odometry
 from gazebo_msgs.msg import EntityState
 from gazebo_msgs.srv import SpawnEntity, SetEntityState
 
@@ -11,7 +11,7 @@ class MarkerSpawner(Node):
     def __init__(self):
         super().__init__("marker_spawner")
 
-        self.pose_sub = self.create_subscription(PoseStamped, "/robot_pose", self.pose_callback, 10)
+        self.odom_sub = self.create_subscription(Odometry, "/marinero/odom", self.odom_callback, 10)
 
         self.marker_client = self.create_client(SpawnEntity, "/spawn_entity")
         self.entity_state_client = self.create_client(SetEntityState, "/gazebo/set_entity_state")
@@ -39,10 +39,10 @@ class MarkerSpawner(Node):
         marker_request.name = self.marker_name
         marker_request.xml = self.sdf_content
         marker_request.robot_namespace = "marinero"
-        marker_request.initial_pose.position.x = self.robot_pose.pose.position.x
-        marker_request.initial_pose.position.y = self.robot_pose.pose.position.y
-        marker_request.initial_pose.position.z = self.robot_pose.pose.position.z + 0.55
-        marker_request.initial_pose.orientation = self.robot_pose.pose.orientation
+        marker_request.initial_pose.position.x = self.robot_pose.pose.pose.position.x
+        marker_request.initial_pose.position.y = self.robot_pose.pose.pose.position.y
+        marker_request.initial_pose.position.z = self.robot_pose.pose.pose.position.z + 0.55
+        marker_request.initial_pose.orientation = self.robot_pose.pose.pose.orientation
 
         future = self.marker_client.call_async(marker_request)
         future.add_done_callback(self.spawn_marker_response_callback)
@@ -60,7 +60,7 @@ class MarkerSpawner(Node):
         finally:
             self.marker_spawn_in_progress = False
             
-    def pose_callback(self, msg: PoseStamped):
+    def odom_callback(self, msg: Odometry):
         self.robot_pose = msg
 
         if not self.marker_spawned:
@@ -72,10 +72,10 @@ class MarkerSpawner(Node):
     def update_marker_position(self):
         marker_state = EntityState()
         marker_state.name = self.marker_name
-        marker_state.pose.position.x = self.robot_pose.pose.position.x
-        marker_state.pose.position.y = self.robot_pose.pose.position.y
-        marker_state.pose.position.z = self.robot_pose.pose.position.z + 0.55
-        marker_state.pose.orientation = self.robot_pose.pose.orientation
+        marker_state.pose.position.x = self.robot_pose.pose.pose.position.x
+        marker_state.pose.position.y = self.robot_pose.pose.pose.position.y
+        marker_state.pose.position.z = self.robot_pose.pose.pose.position.z + 0.55
+        marker_state.pose.orientation = self.robot_pose.pose.pose.orientation
         
 
         state_request = SetEntityState.Request()
