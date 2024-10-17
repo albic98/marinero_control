@@ -27,16 +27,17 @@ class Commander(Node):
         self.scale_linear_turbo = self.declare_parameter("scale_linear_turbo", 20).value
         self.scale_angular_z = self.declare_parameter("scale_angular_z", 8).value
         self.scale_angular = self.declare_parameter("scale_angular", 0.015).value
-        
+
         self.pos = np.array([0,0,0,0,0,1.5,1.5], float)
         self.vel = np.array([0,0,0,0], float)               # left_front, right_front, left_rear, right_rear
         self.target_pos = np.array([0,0,0,0], float)        # target positions for the wheels when the robot is standing still
+        self.max_axle_position = math.pi/4                     # radians
 
         self.cmd_publisher = self.create_publisher(Twist, "/fcc/cmd_vel", 10)
         self.joy_subscription = self.create_subscription(Joy, "/joy", self.joy_callback, 10)
         self.pub_pos = self.create_publisher(Float64MultiArray, "/forward_position_controller/commands", 10)
         self.pub_vel = self.create_publisher(Float64MultiArray, "/forward_velocity_controller/commands", 10)
-        
+
         self.command_timer = self.create_timer(timer_period, self.timer_callback)
 
 
@@ -57,26 +58,26 @@ class Commander(Node):
             vel_msg.linear.x = 0.0 
             vel_msg.linear.y = 0.0
             vel_msg.angular.z = 0.0
-            
+
 
         if (msg.buttons[0] == 1 or msg.buttons[6] == 1) and msg.axes[1] > 0:
             vel_msg.linear.x = msg.axes[1] * self.scale_linear_x + msg.buttons[0] * self.scale_linear_turbo + msg.buttons[6] * self.scale_linear_turbo
         else:
             vel_msg.linear.x = msg.axes[1] * self.scale_linear_x
-            
+
         if msg.axes[3] == 0:
             vel_msg.angular.z = 0.000001
         else:
             vel_msg.angular.z = msg.axes[3] * self.scale_angular_z
-        
+
         self.cmd_publisher.publish(vel_msg)
-        
+
         camera_base_turn = - msg.axes[6] * self.scale_angular
         camera_turn = - msg.axes[7] * self.scale_angular
 
 
     def timer_callback(self):
-        
+
         global vel_msg, mode_selection, camera_base_turn, camera_turn
         adjustment_speed = 0.02 # Steering adjustment speed
 
@@ -123,7 +124,7 @@ class Commander(Node):
         self.pos[2] = self.pos[0]
         self.pos[3] = self.pos[1]
         self.vel[:] = sign*V
-        
+
 
     def opposite_phase_steering(self, vel_msg):
         vel_steerring_offset = vel_msg.angular.z * self.wheel_steering_y_offset
@@ -140,12 +141,15 @@ class Commander(Node):
             self.target_pos[2] = 0.0
             self.target_pos[3] = 0.0
         elif vel_msg.angular.z < 0:
-            self.pos[0] = - math.atan(vel_msg.angular.z*self.wheel_base/(2*abs(vel_msg.linear.x) + vel_msg.angular.z*self.steering_track))
+            self.pos[0] = -math.atan(vel_msg.angular.z*self.wheel_base/(2*abs(vel_msg.linear.x) + vel_msg.angular.z*self.steering_track))
+            if abs(self.pos[0]) > self.max_axle_position:
+                self.pos[0] = self.max_axle_position
             self.axle_positions()
         else:
-            self.pos[0] = - math.atan(vel_msg.angular.z*self.wheel_base/(2*abs(vel_msg.linear.x) - vel_msg.angular.z*self.steering_track))
+            self.pos[0] = -math.atan(vel_msg.angular.z*self.wheel_base/(2*abs(vel_msg.linear.x) - vel_msg.angular.z*self.steering_track))
+            if abs(self.pos[0]) > self.max_axle_position:
+                self.pos[0] = -self.max_axle_position
             self.axle_positions()
-
 
     def pivot_turn(self, vel_msg):
         self.target_pos[0] = math.atan(self.wheel_base / self.steering_track)
@@ -158,21 +162,20 @@ class Commander(Node):
         self.vel[2] = self.vel[0]
         self.vel[3] = self.vel[1]
 
-
     def axle_positions(self):
         self.pos[1] = self.pos[0]
         self.pos[2] = - self.pos[0]
         self.pos[3] = - self.pos[0]
-        
+
 
 def main(args=None):
-    
-    rclpy.init(args=None)
+
+    rclpy.init(args=args)
     commander = Commander()
     rclpy.spin(commander)
     commander.destroy_node()
     rclpy.shutdown()
-    
+
 if __name__ == "__main__":
     main()
 

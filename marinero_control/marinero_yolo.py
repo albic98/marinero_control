@@ -16,7 +16,7 @@ class ImageProcessing(Node):
     def __init__(self):
         super().__init__("imageprocessing")
         self.image_subscriber = self.create_subscription(Image, "/right_depth_camera/image_raw", self.image_callback, 10)
-        self.image_publisher = self.create_publisher(Image, "/camera/image_raw", 10)
+        self.image_publisher = self.create_publisher(Image, "/camera/yolo_processed_image", 10)
         self.classes_to_detect = ["boat", "person", "car", "truck", "bicycle"]
         self.colors = {                 
             "boat":     (0, 0, 255),    # Red
