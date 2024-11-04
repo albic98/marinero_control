@@ -35,7 +35,6 @@ class OdometryPublisher(Node):
     def odometry_callback(self, msg):
         current_time = msg.header.stamp  # Use a single timestamp for all transforms
         
-        # Create a TransformStamped message
         odom_to_base_link = TransformStamped()
         odom_to_base_link.header.stamp = current_time
         odom_to_base_link.header.frame_id = "odom"

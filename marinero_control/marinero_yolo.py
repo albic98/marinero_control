@@ -31,8 +31,7 @@ class ImageProcessing(Node):
             if name in self.classes_to_detect:
                 self.classes.append(id)
         self.br = CvBridge()
-        self.image_subscriber
-        
+
     def image_callback(self, msg):
         self.frame = self.br.imgmsg_to_cv2(msg)
         ret = True
