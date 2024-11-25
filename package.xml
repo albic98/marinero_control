@@ -3,7 +3,7 @@
 <package format="3">
   <name>marinero_control</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>4WIS4WID controller for MARINERO robot</description>
   <maintainer email="albert.androsic2@gmail.com">albert</maintainer>
   <license>TODO: License declaration</license>
 

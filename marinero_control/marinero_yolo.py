@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-import rclpy
 import cv2
+import time
+import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
@@ -11,22 +12,22 @@ from ultralytics import YOLO
 # Suppress YOLO model logging
 logging.getLogger("ultralytics").setLevel(logging.WARNING)
 
-
 class ImageProcessing(Node):
     def __init__(self):
         super().__init__("imageprocessing")
         self.image_subscriber = self.create_subscription(Image, "/right_depth_camera/image_raw", self.image_callback, 10)
         self.image_publisher = self.create_publisher(Image, "/camera/yolo_processed_image", 10)
-        self.classes_to_detect = ["boat", "person", "car", "truck", "bicycle"]
-        self.colors = {                 
-            "boat":     (0, 0, 255),    # Red
-            "person":   (255, 0, 0),    # Blue
-            "car":      (0, 255, 0),    # Green
-            "truck":    (204, 0, 102),  # Pink
-            "bicycle":  (0, 255, 255),  # Yellow
+        self.classes_to_detect = ["boat", "person", "car", "truck", "SMART", "SMART_FIRE"]
+        self.colors = {     ## BGR ##               
+            "boat":         (204, 0, 102),  # Purple
+            "person":       (0, 50, 100),   # Brown
+            "car":          (0, 255, 0),    # Green
+            "SMART":        (255, 0, 0),    # Blue 
+            "SMART_FIRE":   (0, 0, 255),    # Red 
         }
         self.classes = []
-        self.model = YOLO("yolov8x.pt")  # load a pretrained model (recommended for training)
+        self.model = YOLO("yolov8s_marinaPunat.pt")
+        # self.model = YOLO("yolov8x.pt")  # load a pretrained model (recommended for training)
         for id, name in self.model.names.items():
             if name in self.classes_to_detect:
                 self.classes.append(id)
@@ -48,7 +49,7 @@ class ImageProcessing(Node):
                 # obb = result.obb  # Oriented boxes object for OBB outputs
                 # result.show()
                 # result.save(filename="result.jpg")  # save to disk
-                
+
                 for box in boxes:
                     x, y, w, h = box.xywh[0][0:4]
                     class_id = int(box.cls[0]) # Get the class id of the detected object
@@ -62,18 +63,19 @@ class ImageProcessing(Node):
 
                         label = f"{class_name} {confidence*100:.1f}%"
                         (label_width, label_height), baseline = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 1)
-                        
+
                         label_background_top_left = (yolo_box[0], yolo_box[1] - label_height - baseline)
                         label_background_bottom_right = (yolo_box[0] + label_width, yolo_box[1])
                         cv2.rectangle(self.frame, label_background_top_left, label_background_bottom_right, color, thickness=cv2.FILLED)
-                        
+
                         cv2.putText(self.frame, label, (yolo_box[0], yolo_box[1] - baseline), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-            self.image_publisher.publish(self.br.cv2_to_imgmsg(self.frame))
-                    
-                    
+                time.sleep(0.15)
+                self.image_publisher.publish(self.br.cv2_to_imgmsg(self.frame))
+
 def main(args=None):
     
     rclpy.init(args=args)
+
     image_process = ImageProcessing()
     rclpy.spin(image_process)
     image_process.destroy_node()
