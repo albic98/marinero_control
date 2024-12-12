@@ -18,17 +18,16 @@ class OdometryPublisher(Node):
         self.axle_positions = np.zeros(4)
         self.camera_positions = np.zeros(3)
         self.transforms = []
-        
         self.odom_subscriber = self.create_subscription(Odometry, "/marinero/odom", self.odometry_callback, 50)
         self.pos_subscriber = self.create_subscription(Float64MultiArray, "/forward_position_controller/commands", self.position_callback,10)
         self.vel_subscriber = self.create_subscription(Float64MultiArray, "/forward_velocity_controller/commands", self.velocity_callback,10)
-        
+
         self.broadcaster_timer = self.create_timer(0.15, self.odometry_broadcaster)
-        
+
     def position_callback(self, msg):
         self.axle_positions = np.array(msg.data[:4])
         self.camera_positions = np.array(msg.data[4:7])
-    
+
     def velocity_callback(self, msg):
         self.wheel_velocities = np.array(msg.data)
 

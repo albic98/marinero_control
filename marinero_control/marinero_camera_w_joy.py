@@ -17,7 +17,7 @@ class Camera(Node):
         self.l_cam = 1.5      # Initial value for l_cam
         self.r_cam = 1.5      # Initial value for r_cam
         self.axis_flag = Joy()
-        self.axis_flag.axes = []
+        self.axis_flag.axes = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         self.camera_initialized = False
         self.joint_names = ["camera_base_joint", "left_camera_joint", "right_camera_joint"]
         self.last_button_press = 0.0
