@@ -7,7 +7,7 @@ from rclpy.node import Node
 from nav_msgs.msg import Odometry
 from tf2_ros import TransformBroadcaster
 from geometry_msgs.msg import Quaternion, TransformStamped
-from tf_transformations import euler_from_quaternion, quaternion_from_euler
+from tf_transformations import quaternion_from_euler
 from std_msgs.msg import Float64MultiArray
 
 class OdometryPublisher(Node):
@@ -33,7 +33,7 @@ class OdometryPublisher(Node):
 
     def odometry_callback(self, msg):
         current_time = msg.header.stamp  # Use a single timestamp for all transforms
-        
+
         odom_to_base_link = TransformStamped()
         odom_to_base_link.header.stamp = current_time
         odom_to_base_link.header.frame_id = "odom"
@@ -65,7 +65,7 @@ class OdometryPublisher(Node):
             quat = quaternion_from_euler(0.0, 0.0, yaw)
             transform.transform.rotation = Quaternion(x=quat[0], y=quat[1], z=quat[2], w=quat[3])
             transforms.append(transform)
-        
+
 
         ## WHEEL TRANSFORMS ##
         wheels = [
@@ -86,8 +86,8 @@ class OdometryPublisher(Node):
             quat = quaternion_from_euler(roll, 0.0, 0.0)
             transform.transform.rotation = Quaternion(x=quat[0], y=quat[1], z=quat[2], w=quat[3])
             transforms.append(transform)
-            
-        
+
+
         ## CAMERA TRANSFORMS ##
         cameras = [
             ("camera_base", "chassis", 0.0, -0.2375, 0.43, 0.0, 0.0, -math.pi/2 - self.camera_positions[0]),
@@ -108,16 +108,16 @@ class OdometryPublisher(Node):
             quat = quaternion_from_euler(roll, pitch, yaw)
             transform.transform.rotation = Quaternion(x=quat[0], y=quat[1], z=quat[2], w=quat[3])
             transforms.append(transform)
-            
+
         self.transforms = transforms
-        
+
     def odometry_broadcaster(self):
         # Broadcast all transforms at once
         for transform in self.transforms:
             self.tf_broadcaster.sendTransform(transform)
-        
+
 def main(args=None):
-    
+
     rclpy.init(args=args)
     odometry_node = OdometryPublisher()
     rclpy.spin(odometry_node)
