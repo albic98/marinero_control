@@ -20,16 +20,16 @@ class Commander(Node):
         self.wheel_radius = 0.1016
         self.wheel_steering_y_offset = 0.0
         self.steering_track = self.wheel_seperation - 2*self.wheel_steering_y_offset
-        
+
         self.scale_linear_x = self.declare_parameter("scale_linear_x", 10).value
         self.scale_linear_y = self.declare_parameter("scale_linear_y", 8).value
         self.scale_linear_turbo = self.declare_parameter("scale_linear_turbo", 20).value
         self.scale_angular_z = self.declare_parameter("scale_angular_z", 5).value
         self.scale_angular = self.declare_parameter("scale_angular", 0.01).value
-        
+
         self.mode_selection = 0             # 1: opposite phase, 2: in-phase, 3: pivot turn 4: none
         self.axle_adjustment_speed = 0.025  # rotation speed of axles when returning to initial positions
-        
+
         self.pos = np.array([0,0,0,0,0,1.5,1.5], float)
         self.vel = np.array([0,0,0,0], float)                   # left_front, right_front, left_rear, right_rear
         self.target_pos = np.array([0,0,0,0], float)            # target positions for the wheels when the robot is standing still
@@ -45,7 +45,7 @@ class Commander(Node):
 
 
     def joy_callback(self, msg):
-        
+
         global vel_msg
 
         if(msg.buttons[4] == 1 and msg.buttons[5] == 0):    # opposite phase --> L1 button of PS4 controller
@@ -62,7 +62,6 @@ class Commander(Node):
             vel_msg.linear.x = 0.0
             vel_msg.linear.y = 0.0
             vel_msg.angular.z = 0.0
-
 
         if (msg.buttons[0] == 1 or msg.buttons[6] == 1) and msg.axes[1] > 0:
             vel_msg.linear.x = msg.axes[1] * self.scale_linear_x + msg.buttons[0] * self.scale_linear_turbo + msg.buttons[6] * self.scale_linear_turbo
