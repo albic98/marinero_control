@@ -23,6 +23,8 @@ setup(
     entry_points={
         'console_scripts': [
             'gazebo_marker = marinero_control.gazebo_marker:main',
+            'marinero_teleop = marinero_control.marinero_teleop:main',
+            'marinero_control_with_autonomy = marinero_control.marinero_control_with_autonomy:main',
             'marinero_control = marinero_control.marinero_control:main',
             'marinero_control_old = marinero_control.marinero_control_old:main',
             'marinero_yolo = marinero_control.marinero_yolo:main',

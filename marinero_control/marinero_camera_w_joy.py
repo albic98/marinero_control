@@ -17,6 +17,7 @@ class Camera(Node):
         self.l_cam = 1.58      # Initial value for l_cam
         self.r_cam = 1.58     # Initial value for r_cam
         self.cam_base_position = 0.0
+        self.counter = 0.0
         self.axis_flag = Joy()
         self.axis_flag.axes = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         self.camera_initialized = False
@@ -58,7 +59,7 @@ class Camera(Node):
         # self.get_logger().info(f"Adjusted {joint} to {getattr(self, joint)}")
 
     def joint_pose_publisher(self):
-
+        
         msg = JointTrajectory()
         msg.header = Header()
         msg.header.frame_id = "base_link"
@@ -69,9 +70,15 @@ class Camera(Node):
 
         condition_0 = self.axis_flag.axes[6] != 0
         condition_1 = self.axis_flag.axes[7] != 0
-
+        
         if condition_0 or condition_1:
             self.camera_pose_publisher.publish(msg)
+            self.counter = 0.0
+        elif self.counter > 30.0:
+            self.camera_pose_publisher.publish(msg)
+            self.counter = 0.0
+        else:
+            self.counter += 0.1
 
 def main(args=None):
     rclpy.init(args=args)
