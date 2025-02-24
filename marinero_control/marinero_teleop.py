@@ -17,7 +17,7 @@ class MarineroTeleop(Node):
 
         self.scale_linear_x = self.declare_parameter("scale_linear_x", 10).value
         self.scale_linear_y = self.declare_parameter("scale_linear_y", 8).value
-        self.scale_linear_turbo = self.declare_parameter("scale_linear_turbo", 20).value
+        self.scale_linear_turbo = self.declare_parameter("scale_linear_turbo", 15).value
         self.scale_angular_z = self.declare_parameter("scale_angular_z", 5).value
         self.scale_angular = self.declare_parameter("scale_angular", 0.01).value
 

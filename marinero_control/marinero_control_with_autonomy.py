@@ -74,9 +74,9 @@ class MarineroControl(Node):
             self.initial_sign_x = 0.0
             self.entered_function_flag = False
             self.target_pos[:4] = 0.0
-            if self.vel[0] > 10.0:
+            if self.vel[0] > 15.0:
                 self.vel[:4] += - 0.5
-            elif self.vel[0] < 10.0 and self.vel[0] > 5.0:
+            elif self.vel[0] < 15.0 and self.vel[0] > 5.0:
                 self.vel[:4] += - 0.1 * self.vel[0]
             else:
                 self.vel[:4] = 0.0
