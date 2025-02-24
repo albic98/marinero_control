@@ -19,7 +19,6 @@ class MarineroMarker(Node):
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
-        self.marker_timer = self.create_timer(0.5, self.publish_markers)
         self.position = (0.0, 0.0)
         self.orientation = Quaternion(x=0.0, y=0.0, z=0.0, w=1.0)
 
@@ -44,6 +43,8 @@ class MarineroMarker(Node):
         self.pose.pose.position.z = self.height
         self.pose.pose.orientation = self.orientation
         self.pose_publisher.publish(self.pose)
+        
+        self.publish_markers() # Publish markers for visualization in RViz
 
     def create_marker_line(self, point1, point2):
         marker_line = Marker()
