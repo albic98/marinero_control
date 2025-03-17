@@ -41,7 +41,7 @@ class MarkerSpawner(Node):
         marker_request.robot_namespace = "marinero"
         marker_request.initial_pose.position.x = self.robot_pose.pose.pose.position.x
         marker_request.initial_pose.position.y = self.robot_pose.pose.pose.position.y
-        marker_request.initial_pose.position.z = self.robot_pose.pose.pose.position.z + 0.55
+        marker_request.initial_pose.position.z = self.robot_pose.pose.pose.position.z + 2.25
         marker_request.initial_pose.orientation = self.robot_pose.pose.pose.orientation
 
         future = self.marker_client.call_async(marker_request)
@@ -74,7 +74,7 @@ class MarkerSpawner(Node):
         marker_state.name = self.marker_name
         marker_state.pose.position.x = self.robot_pose.pose.pose.position.x
         marker_state.pose.position.y = self.robot_pose.pose.pose.position.y
-        marker_state.pose.position.z = self.robot_pose.pose.pose.position.z + 0.55
+        marker_state.pose.position.z = self.robot_pose.pose.pose.position.z + 2.25
         marker_state.pose.orientation = self.robot_pose.pose.pose.orientation
         
 
