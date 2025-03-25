@@ -1,11 +1,15 @@
 #usr/bin/env python3
 
-import time
+import os
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
 from gazebo_msgs.msg import EntityState
 from gazebo_msgs.srv import SpawnEntity, SetEntityState
+from ament_index_python.packages import get_package_share_directory
+
+package_name = "marinero_simulations"
+package_path = get_package_share_directory(package_name)
 
 class MarkerSpawner(Node):
     def __init__(self):
@@ -16,7 +20,7 @@ class MarkerSpawner(Node):
         self.marker_client = self.create_client(SpawnEntity, "/spawn_entity")
         self.entity_state_client = self.create_client(SetEntityState, "/gazebo/set_entity_state")
 
-        self.sdf_file_path = "/home/albert/marinero_ws/src/marinero_simulations/models/gazebo_marker/model.sdf"
+        self.sdf_file_path = os.path.join(package_path,"models/gazebo_marker/model.sdf")
         with open(self.sdf_file_path, "r") as f:
             self.sdf_content = f.read()
 
