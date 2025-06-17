@@ -43,7 +43,7 @@ class MarineroMarker(Node):
         self.pose.pose.position.z = self.height
         self.pose.pose.orientation = self.orientation
         self.pose_publisher.publish(self.pose)
-        
+
         self.publish_markers() # Publish markers for visualization in RViz
 
     def create_marker_line(self, point1, point2):
@@ -124,8 +124,12 @@ class MarineroMarker(Node):
             return
 
         marker_array = MarkerArray()
+        marker_array.markers = []
 
-        point1 = Point(x=self.position[0], y=self.position[1], z=1.0)
+        if self.height < 1.0:
+            point1 = Point(x=self.position[0], y=self.position[1], z=1.0)
+        else:
+            point1 = Point(x=self.position[0], y=self.position[1], z=2.25)
         point2 = Point(x=self.position[0], y=self.position[1], z=15.0)
         point3 = Point(x=self.position[0], y=self.position[1], z=20.0)
 
@@ -133,7 +137,7 @@ class MarineroMarker(Node):
         self.marker_sphere.pose.position = point3
         self.marker_arrow.pose.position = point3
         self.marker_arrow.pose.orientation = self.orientation
-        
+
         try:
             transform = self.tf_buffer.lookup_transform('odom', 'right_camera_center_link', rclpy.time.Time())
             self.camera_marker_arrow.pose.position = point2
@@ -141,7 +145,7 @@ class MarineroMarker(Node):
         except Exception as e:
             self.camera_marker_arrow.pose.position = point2
             self.camera_marker_arrow.pose.orientation = self.orientation
-            
+
         marker_array.markers.append(self.marker_line)
         marker_array.markers.append(self.marker_sphere)
         marker_array.markers.append(self.marker_arrow)

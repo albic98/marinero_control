@@ -26,6 +26,7 @@ class ImageProcessing(Node):
             "SMART_FIRE":   (0, 0, 255),    # Red 
         }
         self.classes = []
+        self.boxes = []
         self.model = YOLO("yolov8s_marinaPunat.pt")
         # self.model = YOLO("yolov8x.pt")  # load a pretrained model (recommended for training)
         for id, name in self.model.names.items():

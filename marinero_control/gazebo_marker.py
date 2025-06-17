@@ -24,6 +24,7 @@ class MarkerSpawner(Node):
         with open(self.sdf_file_path, "r") as f:
             self.sdf_content = f.read()
 
+        self.marker_height = 2.25
         self.robot_pose = None
         self.marker_spawned = False
         self.marker_spawn_in_progress = False
@@ -38,14 +39,14 @@ class MarkerSpawner(Node):
         if self.marker_spawn_in_progress or self.marker_spawned:
             return
         self.marker_spawn_in_progress = True 
-        
+
         marker_request = SpawnEntity.Request()
         marker_request.name = self.marker_name
         marker_request.xml = self.sdf_content
         marker_request.robot_namespace = "marinero"
         marker_request.initial_pose.position.x = self.robot_pose.pose.pose.position.x
         marker_request.initial_pose.position.y = self.robot_pose.pose.pose.position.y
-        marker_request.initial_pose.position.z = self.robot_pose.pose.pose.position.z + 2.25
+        marker_request.initial_pose.position.z = self.marker_height
         marker_request.initial_pose.orientation = self.robot_pose.pose.pose.orientation
 
         future = self.marker_client.call_async(marker_request)
@@ -78,9 +79,9 @@ class MarkerSpawner(Node):
         marker_state.name = self.marker_name
         marker_state.pose.position.x = self.robot_pose.pose.pose.position.x
         marker_state.pose.position.y = self.robot_pose.pose.pose.position.y
-        marker_state.pose.position.z = self.robot_pose.pose.pose.position.z + 2.25
+        marker_state.pose.position.z = self.marker_height
         marker_state.pose.orientation = self.robot_pose.pose.pose.orientation
-        
+
 
         state_request = SetEntityState.Request()
         state_request.state = marker_state
