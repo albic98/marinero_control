@@ -5,8 +5,12 @@ import rclpy
 import time
 import numpy as np
 from rclpy.node import Node
+from nav_msgs.msg import Odometry
+from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import Twist, TwistStamped
 from std_msgs.msg import Float64MultiArray, Int32
+from tf_transformations import euler_from_quaternion
+
 
 vel_msg = Twist()       # robot velocity after twist mux node
 
@@ -20,15 +24,12 @@ class MarineroControl(Node):
         self.wheel_steering_y_offset = 0.0
         self.steering_track = self.wheel_seperation - 2*self.wheel_steering_y_offset
 
-        self.alpha = 0.025  # Smoothing factor (adjust as needed)
-        self.dead_zone = 0.01   # Ignore changes smaller than this
         self.scale_linear_x = 10.0  # Linear velocity x scale
         self.scale_linear_y = 8.0   # Linear velocity y scale
         self.scale_angular_z = 5.0  # Angular velocity scale
         
         self.camera_base_turn, self.camera_turn = [0.0, 0.0]    # Initial camera positions
         self.nav_vel_x, self.nav_vel_y, self.nav_vel_z = 0.0, 0.0, 0.0 # Navigation velocities
-        self.filtered_vel_x, self.filtered_vel_y, self.filtered_vel_z = 0.0, 0.0, 0.0 # Filtered velocities
 
         self.initial_sign_x = 0.0           # Initial sign of x velocity
         self.mode_selection = 0             # 1: opposite phase, 2: in-phase, 3: pivot turn 4: none
@@ -40,12 +41,27 @@ class MarineroControl(Node):
         self.target_pos = np.array([0,0,0,0], float)            # target positions for the wheels when the robot is standing still
         self.max_axle_position = math.pi/4                      # radians
 
+        self.goal_position = PoseStamped().pose.position
+        self.goal_orientation = PoseStamped().pose.orientation
+        self.position = Odometry().pose.pose.position
+        self.orientation = Odometry().pose.pose.orientation
+        
         self.final_vel_subscription = self.create_subscription(Twist, "/cmd_vel_out", self.velocity_callback, 10)
         self.stamped_velocity = self.create_publisher(TwistStamped, "/cmd_vel_stamped", 10)
         self.camera_subscription = self.create_subscription(Float64MultiArray, "/camera_position", self.camera_pose_callback, 10)  
         self.mode_selection_subscription = self.create_subscription(Int32, "/mode_selection", self.mode_selection_callback, 10)
         self.pub_pos = self.create_publisher(Float64MultiArray, "/forward_position_controller/commands", 10)
         self.pub_vel = self.create_publisher(Float64MultiArray, "/forward_velocity_controller/commands", 10)
+        self.odom_subscriber = self.create_subscription(Odometry, "/marinero/odom", self.odom_callback, 10)
+        self.goal_subscriber = self.create_subscription(PoseStamped, "/goal_pose", self.goal_callback, 10)
+
+    def odom_callback(self, msg):
+        self.position = msg.pose.pose.position
+        self.orientation = msg.pose.pose.orientation
+
+    def goal_callback(self, msg):
+        self.goal_position = msg.pose.position
+        self.goal_orientation = msg.pose.orientation
 
     def mode_selection_callback(self, msg):
         self.mode_selection = msg.data
@@ -83,7 +99,7 @@ class MarineroControl(Node):
             self.entered_function_flag = False
             self.target_pos[:4] = 0.0
             if self.vel[0] > 15.0:
-                self.vel[:4] += - 0.5
+                self.vel[:4] += - 0.85
             elif self.vel[0] < 15.0 and self.vel[0] > 5.0:
                 self.vel[:4] += - 0.1 * self.vel[0]
             else:
@@ -108,58 +124,39 @@ class MarineroControl(Node):
         nav_vel_x = vel_msg.linear.x
         nav_vel_z = vel_msg.angular.z
         vel_msg.linear.x *= self.scale_linear_x
-        vel_msg.linear.y *= self.scale_linear_y
         vel_msg.angular.z *= self.scale_angular_z
+        
+        dx = self.goal_position.x - self.position.x
+        dy = self.goal_position.y - self.position.y
+        self.distance_from_goal = math.sqrt(dx**2 + dy**2)
+        g_q = self.goal_orientation
+        r_q = self.orientation
+        self.goal_euler = euler_from_quaternion([g_q.x, g_q.y, g_q.z, g_q.w])
+        self.robot_euler = euler_from_quaternion([r_q.x, r_q.y, r_q.z, r_q.w])
+        self.angle_to_goal = self.goal_euler[2] - self.robot_euler[2] 
 
-        # Prevent sudden spikes
-        if hasattr(self, 'last_vel_msg'):
-            max_linear_delta = 0.25  # m/s
-            max_angular_delta = 0.1  # rad/s
+        if abs(self.angle_to_goal) < 0.25 and abs(self.distance_from_goal) < 0.5:
+            vel_msg.linear.y = math.copysign(0.1, self.angle_to_goal) if self.angle_to_goal != 0 else 0.0
+            vel_msg.linear.y *= self.scale_linear_y
+            self.in_phase_steering(vel_msg)
 
-            vel_msg.linear.x = self.limit_change(
-                self.last_vel_msg.linear.x, vel_msg.linear.x, max_linear_delta)
-            vel_msg.angular.z = self.limit_change(
-                self.last_vel_msg.angular.z, vel_msg.angular.z, max_angular_delta)
+        elif 0.0 < self.distance_from_goal < 0.25:
+            self.opposite_phase_steering(vel_msg)
 
-        # Smooth transition blending factor (0: full steering, 1: full pivot)
-        pivot_weight = 0.0
-        if nav_vel_x == 0.0 and nav_vel_z == 0.0:
-            pivot_weight = 1.0
-        elif (nav_vel_z != 0.0 and abs(nav_vel_x) < 0.1) or abs(nav_vel_z) > 0.75: # For MPPI Navigation
-            pivot_weight = min(1.0, 1.0 - abs(nav_vel_x) / 0.1 + abs(nav_vel_z - 0.75))  # Smooth ramp
+        elif nav_vel_x > 0.0 and abs(nav_vel_x) > abs(nav_vel_z):
+            self.opposite_phase_steering(vel_msg)
 
-        pivot_weight = min(max(pivot_weight, 0.0), 1.0)
-
-        # Generate pivot and steering commands separately
-        pivot_msg = Twist()
-        pivot_msg.linear.x = 0.0
-        pivot_msg.linear.y = 0.0
-        if nav_vel_z < 0.0:
-            pivot_msg.angular.z = -1.0 * self.scale_angular_z
         else:
-            pivot_msg.angular.z = 1.0 * self.scale_angular_z
+            if nav_vel_z > 0.0:
+                vel_msg.angular.z = max(math.copysign(0.2, nav_vel_z), nav_vel_z) * self.scale_angular_z
+            else:
+                vel_msg.angular.z = min(math.copysign(0.2, nav_vel_z), nav_vel_z) * self.scale_angular_z
+            self.pivot_turn(vel_msg)
 
-        # Blend the commands
-        blended_msg = Twist()
-        blended_msg.linear.x = (1 - pivot_weight) * vel_msg.linear.x + pivot_weight * pivot_msg.linear.x
-        blended_msg.linear.y = (1 - pivot_weight) * vel_msg.linear.y + pivot_weight * pivot_msg.linear.y
-        blended_msg.angular.z = (1 - pivot_weight) * vel_msg.angular.z + pivot_weight * pivot_msg.angular.z
-
-        # Suppress sudden axle changes (angular.z smoothing)
-        if hasattr(self, 'last_axle_angle'):
-            max_steering_delta = 0.05  # rad per update
-            blended_msg.angular.z = self.limit_change(
-                self.last_axle_angle, blended_msg.angular.z, max_steering_delta)
-
-        self.last_axle_angle = blended_msg.angular.z
-
-        # Choose driving mode based on dominant behavior
-        if pivot_weight > 0.5:
-            self.pivot_turn(blended_msg)
-        else:
-            self.opposite_phase_steering(blended_msg)
-
-        self.last_vel_msg = vel_msg
+        # Debugging output
+        # self.get_logger().info(f"Autonomy Control - Mode: {self.mode_selection}, Linear X: {vel_msg.linear.x}, Angular Z: {vel_msg.angular.z}")
+        print(f"Distance from goal: {self.distance_from_goal:.2f}, Angle to goal: {self.angle_to_goal:.2f}")
+        print(f"Linear X: {vel_msg.linear.x:.2f}, Linear Y: {vel_msg.linear.y:.2f}, Angular Z: {vel_msg.angular.z:.2f}")
 
 
     # ### For DWB Navigation
@@ -174,12 +171,6 @@ class MarineroControl(Node):
     #     else:
     #         self.opposite_phase_steering(vel_msg)
 
-
-    def limit_change(self, last_val, current_val, max_delta):
-        delta = current_val - last_val
-        if abs(delta) > max_delta:
-            return last_val + max_delta * (1 if delta > 0 else -1)
-        return current_val
 
     def in_phase_steering(self, vel_msg):
         if self.initial_sign_x == 0.0 or self.entered_function_flag == False: 

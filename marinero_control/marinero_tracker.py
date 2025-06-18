@@ -14,7 +14,6 @@ class MarineroMarker(Node):
         super().__init__("marinero_marker")
         self.odom_sub = self.create_subscription(Odometry, "/marinero/odom", self.location_callback, 10)
         self.marinero_publisher = self.create_publisher(MarkerArray, "/marinero_tracker", 10)
-        self.pose_publisher = self.create_publisher(PoseStamped, '/robot_pose', 10)
 
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
@@ -42,7 +41,6 @@ class MarineroMarker(Node):
         self.pose.pose.position.y = self.position[1]
         self.pose.pose.position.z = self.height
         self.pose.pose.orientation = self.orientation
-        self.pose_publisher.publish(self.pose)
 
         self.publish_markers() # Publish markers for visualization in RViz
 
