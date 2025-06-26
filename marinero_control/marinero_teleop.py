@@ -46,7 +46,7 @@ class MarineroTeleop(Node):
             joy_vel_msg.linear.y = 0.0
         elif(msg.buttons[5] == 1 and msg.buttons[4] == 0):  # In-phase --> R1 button of PS4 controller
             self.mode_selection.data = 1
-            joy_vel_msg.linear.y = - msg.axes[0] * self.scale_linear_y
+            joy_vel_msg.linear.y = msg.axes[0] * self.scale_linear_y
         elif(msg.buttons[4] == 1 and msg.buttons[5] == 1):  # Pivot turn --> L1 and R1 button of PS4 controller
             self.mode_selection.data = 3
             joy_vel_msg.linear.y = 0.0
@@ -75,7 +75,7 @@ class MarineroTeleop(Node):
             self.joy_publisher.publish(joy_vel_msg)
 
         # Camera control
-        self.camera_positions[0] = - msg.axes[6] * self.scale_angular
+        self.camera_positions[0] = msg.axes[6] * self.scale_angular
         self.camera_positions[1] = - msg.axes[7] * self.scale_angular
 
         # Publish camera position

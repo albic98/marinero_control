@@ -13,7 +13,7 @@ class DockingStation(Node):
         super().__init__('docking_station')
         self.goal_pose_publisher = self.create_publisher(PoseStamped, '/goal_pose', 10)
         self.docking_station_position = np.array([197.212, 280.830, 0, 0, 0, -3.0755])
-        
+
     def go_to_docking_station(self, x, y, z, roll, pitch, yaw):
         goal_pose = PoseStamped()
         goal_pose.header.stamp = self.get_clock().now().to_msg()
@@ -21,7 +21,7 @@ class DockingStation(Node):
         goal_pose.pose.position.x = x
         goal_pose.pose.position.y = y
         goal_pose.pose.position.z = z
-        
+
         quaternion_orientation = quaternion_from_euler(roll, pitch, yaw)
         goal_pose.pose.orientation.x = quaternion_orientation[0]
         goal_pose.pose.orientation.y = quaternion_orientation[1]

@@ -18,9 +18,9 @@ class MarineroControl(Node):
 
     def __init__(self):
         super().__init__("marinero_control")
-        self.wheel_seperation = 0.425
-        self.wheel_base = 0.8
-        self.wheel_radius = 0.1016
+        self.wheel_seperation = 0.45        # self.wheel_seperation = 0.425
+        self.wheel_base = 0.7               # self.wheel_base = 0.8
+        self.wheel_radius = 0.1             # self.wheel_radius = 0.1016
         self.wheel_steering_y_offset = 0.0
         self.steering_track = self.wheel_seperation - 2*self.wheel_steering_y_offset
 
@@ -39,7 +39,7 @@ class MarineroControl(Node):
         self.vel = np.array([0,0,0,0], float)                   # left_front, right_front, left_rear, right_rear
         self.wheel_vel = np.array([0,0,0,0], float)             # wheel velocities for feedback control
         self.target_pos = np.array([0,0,0,0], float)            # target positions for the wheels when the robot is standing still
-        self.max_axle_position = math.pi/4                      # radians
+        self.max_axle_position = math.pi/6                      # radians
 
         self.goal_position = PoseStamped().pose.position
         self.goal_orientation = PoseStamped().pose.orientation
@@ -118,14 +118,13 @@ class MarineroControl(Node):
         self.pub_pos.publish(pos_array)
         self.pub_vel.publish(vel_array)
 
-
     ### For MPPI Navigation
     def autonomy_control(self, vel_msg):
         nav_vel_x = vel_msg.linear.x
         nav_vel_z = vel_msg.angular.z
         vel_msg.linear.x *= self.scale_linear_x
         vel_msg.angular.z *= self.scale_angular_z
-        
+
         dx = self.goal_position.x - self.position.x
         dy = self.goal_position.y - self.position.y
         self.distance_from_goal = math.sqrt(dx**2 + dy**2)
@@ -137,7 +136,7 @@ class MarineroControl(Node):
 
         if abs(self.angle_to_goal) < 0.25 and abs(self.distance_from_goal) < 0.5:
             vel_msg.linear.y = math.copysign(0.1, self.angle_to_goal) if self.angle_to_goal != 0 else 0.0
-            vel_msg.linear.y *= self.scale_linear_y
+            vel_msg.linear.y *= - self.scale_linear_y
             self.in_phase_steering(vel_msg)
 
         elif 0.0 < self.distance_from_goal < 0.25:
@@ -145,7 +144,6 @@ class MarineroControl(Node):
 
         elif nav_vel_x > 0.0 and abs(nav_vel_x) > abs(nav_vel_z):
             self.opposite_phase_steering(vel_msg)
-
         else:
             if nav_vel_z > 0.0:
                 vel_msg.angular.z = max(math.copysign(0.2, nav_vel_z), nav_vel_z) * self.scale_angular_z
@@ -153,10 +151,11 @@ class MarineroControl(Node):
                 vel_msg.angular.z = min(math.copysign(0.2, nav_vel_z), nav_vel_z) * self.scale_angular_z
             self.pivot_turn(vel_msg)
 
-        # Debugging output
-        # self.get_logger().info(f"Autonomy Control - Mode: {self.mode_selection}, Linear X: {vel_msg.linear.x}, Angular Z: {vel_msg.angular.z}")
-        print(f"Distance from goal: {self.distance_from_goal:.2f}, Angle to goal: {self.angle_to_goal:.2f}")
-        print(f"Linear X: {vel_msg.linear.x:.2f}, Linear Y: {vel_msg.linear.y:.2f}, Angular Z: {vel_msg.angular.z:.2f}")
+        ### Debugging output
+        # self.get_logger().info(f"Distance from goal: {self.distance_from_goal:.2f}, Angle to goal: {self.angle_to_goal:.2f}")
+        # self.get_logger().info(f"Linear X: {vel_msg.linear.x:.2f}, Linear Y: {vel_msg.linear.y:.2f}, Angular Z: {vel_msg.angular.z:.2f}")
+        # print(f"Distance from goal: {self.distance_from_goal:.2f}, Angle to goal: {self.angle_to_goal:.2f}")
+        # print(f"Linear X: {vel_msg.linear.x:.2f}, Linear Y: {vel_msg.linear.y:.2f}, Angular Z: {vel_msg.angular.z:.2f}")
 
 
     # ### For DWB Navigation
@@ -190,7 +189,7 @@ class MarineroControl(Node):
         else:
             axle_angle = 0.0
 
-        V = math.hypot(vel_msg.linear.x, vel_msg.linear.y)  # Combined linear velocity magnitude
+        V = math.hypot(vel_msg.linear.x, vel_msg.linear.y)
         self.pos[:4] = axle_angle
         self.vel[:] = sign_x * V
 
@@ -210,21 +209,21 @@ class MarineroControl(Node):
             self.target_pos[2] = 0.0
             self.target_pos[3] = 0.0
         elif vel_msg.angular.z < 0:
-            self.pos[0] = -1.5*math.atan(vel_msg.angular.z*self.wheel_base/(2*abs(vel_msg.linear.x) + vel_msg.angular.z*self.steering_track))
+            self.pos[0] = 1.5*math.atan(vel_msg.angular.z*self.wheel_base/(2*abs(vel_msg.linear.x) + vel_msg.angular.z*self.steering_track))
+            if abs(self.pos[0]) > self.max_axle_position:
+                self.pos[0] = - self.max_axle_position
+            self.axle_positions()
+        else:
+            self.pos[0] = 1.5*math.atan(vel_msg.angular.z*self.wheel_base/(2*abs(vel_msg.linear.x) - vel_msg.angular.z*self.steering_track))
             if abs(self.pos[0]) > self.max_axle_position:
                 self.pos[0] = self.max_axle_position
             self.axle_positions()
-        else:
-            self.pos[0] = -1.5*math.atan(vel_msg.angular.z*self.wheel_base/(2*abs(vel_msg.linear.x) - vel_msg.angular.z*self.steering_track))
-            if abs(self.pos[0]) > self.max_axle_position:
-                self.pos[0] = -self.max_axle_position
-            self.axle_positions()
 
     def pivot_turn(self, vel_msg):
-        self.target_pos[0] = math.atan(self.wheel_base / self.steering_track)
-        self.target_pos[1] = - math.atan(self.wheel_base / self.steering_track)
-        self.target_pos[2] = - math.atan(self.wheel_base / self.steering_track)
-        self.target_pos[3] = math.atan(self.wheel_base / self.steering_track)
+        self.target_pos[0] = - math.atan(self.wheel_base / self.steering_track)
+        self.target_pos[1] = math.atan(self.wheel_base / self.steering_track)
+        self.target_pos[2] = math.atan(self.wheel_base / self.steering_track)
+        self.target_pos[3] = -math.atan(self.wheel_base / self.steering_track)
 
         if self.target_pos[0] == self.pos[0]:
             self.vel[0] = - vel_msg.angular.z

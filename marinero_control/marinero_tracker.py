@@ -47,10 +47,11 @@ class MarineroMarker(Node):
     def create_marker_line(self, point1, point2):
         marker_line = Marker()
         marker_line.header.frame_id = "odom"
-        marker_line.type = Marker.LINE_STRIP
+        marker_line.type = Marker.CYLINDER
         marker_line.action = Marker.ADD
-        # marker_line.points = [point1, point2]
-        marker_line.scale.x = 0.7
+        marker_line.scale.x = 0.5
+        marker_line.scale.y = 0.5
+        marker_line.scale.z = 15.0
         marker_line.color.a = 1.0
         marker_line.color.r = 1.0
         marker_line.color.g = 0.0
@@ -102,9 +103,9 @@ class MarineroMarker(Node):
         camera_marker_arrow.action = Marker.ADD
         # marker_arrow.pose.position = point
         # marker_arrow.pose.orientation = self.orientation
-        camera_marker_arrow.scale.x = 10.0
-        camera_marker_arrow.scale.y = 1.2
-        camera_marker_arrow.scale.z = 1.2
+        camera_marker_arrow.scale.x = 8.5
+        camera_marker_arrow.scale.y = 0.75
+        camera_marker_arrow.scale.z = 0.75
         camera_marker_arrow.color.a = 1.0
         camera_marker_arrow.color.r = 0.0
         camera_marker_arrow.color.g = 1.0
@@ -124,20 +125,18 @@ class MarineroMarker(Node):
         marker_array = MarkerArray()
         marker_array.markers = []
 
-        if self.height < 1.0:
-            point1 = Point(x=self.position[0], y=self.position[1], z=1.0)
-        else:
-            point1 = Point(x=self.position[0], y=self.position[1], z=2.25)
-        point2 = Point(x=self.position[0], y=self.position[1], z=15.0)
-        point3 = Point(x=self.position[0], y=self.position[1], z=20.0)
 
-        self.marker_line.points = [point1, point3]
+        point1 = Point(x=self.position[0], y=self.position[1], z=8.75)
+        point2 = Point(x=self.position[0], y=self.position[1], z=10.0)
+        point3 = Point(x=self.position[0], y=self.position[1], z=15.0)
+
+        self.marker_line.pose.position = point1
         self.marker_sphere.pose.position = point3
         self.marker_arrow.pose.position = point3
         self.marker_arrow.pose.orientation = self.orientation
 
         try:
-            transform = self.tf_buffer.lookup_transform('odom', 'right_camera_center_link', rclpy.time.Time())
+            transform = self.tf_buffer.lookup_transform('map', 'right_camera_center_link', rclpy.time.Time())
             self.camera_marker_arrow.pose.position = point2
             self.camera_marker_arrow.pose.orientation = transform.transform.rotation
         except Exception as e:

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import math
+import time
 import rclpy
 import numpy as np
 from rclpy.node import Node
@@ -21,19 +22,21 @@ class OdometryPublisher(Node):
         self.odom_subscriber = self.create_subscription(Odometry, "/marinero/odom", self.odometry_callback, 100)
         self.pos_subscriber = self.create_subscription(Float64MultiArray, "/forward_position_controller/commands", self.position_callback,10)
         self.vel_subscriber = self.create_subscription(Float64MultiArray, "/forward_velocity_controller/commands", self.velocity_callback,10)
-
-        self.broadcaster_timer = self.create_timer(5.0, self.odometry_broadcaster)
+        self.wheel_pitches = [0.0, 0.0, 0.0, 0.0]
+        self.angular_velocities = [0.0, 0.0, 0.0, 0.0]
+        self.previous_time = self.get_clock().now()
 
     def position_callback(self, msg):
         self.axle_positions = np.array(msg.data[:4])
         self.camera_positions = np.array(msg.data[4:7])
 
     def velocity_callback(self, msg):
-        self.wheel_velocities = np.array(msg.data)
+        self.angular_velocities = np.array(msg.data)
 
     def odometry_callback(self, msg):
+        transforms = []
         current_time = msg.header.stamp  # Use a single timestamp for all transforms
-
+        current_rcl_time = self.get_clock().now()
         odom_to_base_link = TransformStamped()
         odom_to_base_link.header.stamp = current_time
         odom_to_base_link.header.frame_id = "odom"
@@ -44,14 +47,12 @@ class OdometryPublisher(Node):
         odom_to_base_link.transform.rotation = msg.pose.pose.orientation
         self.tf_broadcaster.sendTransform(odom_to_base_link)
 
-        transforms = []
-
         ## AXLE TRANSFORMS ##
         axles = [
-            ("fl_axle_link", 0.35, 0.225, 0.232, self.axle_positions[1]),
-            ("fr_axle_link", 0.35, -0.225, 0.232, self.axle_positions[0]),
-            ("rl_axle_link", -0.35, 0.225, 0.232, self.axle_positions[3]),
-            ("rr_axle_link", -0.35, -0.225, 0.232, self.axle_positions[2])
+            ("fl_axle_link", 0.35, 0.225, 0.232, self.axle_positions[0]),
+            ("fr_axle_link", 0.35, -0.225, 0.232, self.axle_positions[1]),
+            ("rl_axle_link", -0.35, 0.225, 0.232, self.axle_positions[2]),
+            ("rr_axle_link", -0.35, -0.225, 0.232, self.axle_positions[3])
         ]
 
         for child_frame_id, x, y, z, yaw in axles:
@@ -67,15 +68,19 @@ class OdometryPublisher(Node):
             transforms.append(transform)
 
 
-        ## WHEEL TRANSFORMS ##
+        # WHEEL TRANSFORMS
         wheels = [
-            ("fl_wheel", "fl_axle_link", -0.132, -math.pi/2),
-            ("fr_wheel", "fr_axle_link", -0.132, math.pi/2),
-            ("rl_wheel", "rl_axle_link", -0.132, -math.pi/2),
-            ("rr_wheel", "rr_axle_link", -0.132, math.pi/2)
+            ("fl_wheel", "fl_axle_link", -0.132, -math.pi/2, self.angular_velocities[0]),
+            ("fr_wheel", "fr_axle_link", -0.132,  math.pi/2, self.angular_velocities[1]),
+            ("rl_wheel", "rl_axle_link", -0.132, -math.pi/2, self.angular_velocities[2]),
+            ("rr_wheel", "rr_axle_link", -0.132,  math.pi/2, self.angular_velocities[3]),
         ]
 
-        for child_frame_id, parent_frame_id, z, roll in wheels:
+        last_rcl_time = self.previous_time
+        dt = current_rcl_time.nanoseconds - last_rcl_time.nanoseconds
+        self.previous_time = self.get_clock().now()
+
+        for i, (child_frame_id, parent_frame_id, z, roll, angular_velocity) in enumerate(wheels):
             transform = TransformStamped()
             transform.header.stamp = current_time
             transform.header.frame_id = parent_frame_id
@@ -83,7 +88,9 @@ class OdometryPublisher(Node):
             transform.transform.translation.x = 0.0
             transform.transform.translation.y = 0.0
             transform.transform.translation.z = z
-            quat = quaternion_from_euler(roll, 0.0, 0.0)
+
+            self.wheel_pitches[i] += angular_velocity * dt * 1e-9  # Convert nanoseconds to seconds
+            quat = quaternion_from_euler(roll, self.wheel_pitches[i], 0.0)
             transform.transform.rotation = Quaternion(x=quat[0], y=quat[1], z=quat[2], w=quat[3])
             transforms.append(transform)
 
@@ -110,11 +117,8 @@ class OdometryPublisher(Node):
             transforms.append(transform)
 
         self.transforms = transforms
+        self.tf_broadcaster.sendTransform(self.transforms)
 
-    def odometry_broadcaster(self):
-        # Broadcast all transforms at once
-        for transform in self.transforms:
-            self.tf_broadcaster.sendTransform(transform)
 
 
 def main(args=None):
