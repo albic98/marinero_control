@@ -34,6 +34,7 @@ class MarineroControl(Node):
         self.initial_sign_x = 0.0           # Initial sign of x velocity
         self.mode_selection = 0             # 1: opposite phase, 2: in-phase, 3: pivot turn 4: none
         self.axle_adjustment_speed = 0.025  # rotation speed of axles when returning to initial positions
+        self.max_angle_step = 0.05          # maximum angle step for the axles
 
         self.pos = np.array([0,0,0,0,0,1.5,1.5], float)
         self.vel = np.array([0,0,0,0], float)                   # left_front, right_front, left_rear, right_rear
@@ -98,16 +99,18 @@ class MarineroControl(Node):
             self.initial_sign_x = 0.0
             self.entered_function_flag = False
             self.target_pos[:4] = 0.0
+            
+            # Slowly reduce the wheel velocities to zero to avoid abrupt stops
             if self.vel[0] > 15.0:
                 self.vel[:4] += - 0.85
-            elif self.vel[0] < 15.0 and self.vel[0] > 5.0:
+            elif 5.0 < self.vel[0] < 15.0:
                 self.vel[:4] += - 0.1 * self.vel[0]
             else:
                 self.vel[:4] = 0.0
 
         for i in range(4):
             target_delta = self.target_pos[i] - self.pos[i]
-            if abs(target_delta) > self.axle_adjustment_speed:
+            if abs(target_delta) > self.max_angle_step:
                     self.pos[i] += self.axle_adjustment_speed * np.sign(target_delta)
             else:
                 self.pos[i] = self.target_pos[i]
@@ -139,13 +142,14 @@ class MarineroControl(Node):
             vel_msg.linear.y *= - self.scale_linear_y
             self.in_phase_steering(vel_msg)
 
-        elif 0.0 < self.distance_from_goal < 0.25:
+        elif 0.0 < self.distance_from_goal < 0.25 or (nav_vel_x > 0.0 and abs(nav_vel_x) > abs(nav_vel_z)):
             self.opposite_phase_steering(vel_msg)
 
-        elif nav_vel_x > 0.0 and abs(nav_vel_x) > abs(nav_vel_z):
+        elif nav_vel_x > 0.2 and abs(nav_vel_x - abs(nav_vel_z)) < 0.2 and self.distance_from_goal > 2.0:
             self.opposite_phase_steering(vel_msg)
+
         else:
-            if nav_vel_z > 0.0:
+            if nav_vel_z > 0.0 or abs(nav_vel_z) < 0.05:
                 vel_msg.angular.z = max(math.copysign(0.2, nav_vel_z), nav_vel_z) * self.scale_angular_z
             else:
                 vel_msg.angular.z = min(math.copysign(0.2, nav_vel_z), nav_vel_z) * self.scale_angular_z

@@ -38,7 +38,7 @@ class ImageProcessing(Node):
         self.frame = self.br.imgmsg_to_cv2(msg)
         ret = True
         if ret:
-            self.results = self.model.predict(self.frame, conf = 0.4, iou = 0.2, classes = self.classes)
+            self.results = self.model.predict(self.frame, conf = 0.5, iou = 0.2, classes = self.classes)
             # self.results = self.model(self.frame) # return a list of Results objects
 
             ## Process results list
@@ -76,7 +76,6 @@ class ImageProcessing(Node):
 def main(args=None):
     
     rclpy.init(args=args)
-
     image_process = ImageProcessing()
     rclpy.spin(image_process)
     image_process.destroy_node()
