@@ -145,7 +145,7 @@ class MarineroControl(Node):
         elif 0.0 < self.distance_from_goal < 0.25 or (nav_vel_x > 0.0 and abs(nav_vel_x) > abs(nav_vel_z)):
             self.opposite_phase_steering(vel_msg)
 
-        elif nav_vel_x > 0.2 and abs(nav_vel_x - abs(nav_vel_z)) < 0.2 and self.distance_from_goal > 2.0:
+        elif nav_vel_x > 0.2 and abs(nav_vel_x - abs(nav_vel_z)) < 0.35 and self.distance_from_goal > 2.0:
             self.opposite_phase_steering(vel_msg)
 
         else:
