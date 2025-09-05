@@ -101,19 +101,23 @@ class MarineroControl(Node):
             self.target_pos[:4] = 0.0
             
             # Slowly reduce the wheel velocities to zero to avoid abrupt stops
-            if self.vel[0] > 15.0:
-                self.vel[:4] += - 0.85
-            elif 5.0 < self.vel[0] < 15.0:
-                self.vel[:4] += - 0.1 * self.vel[0]
-            else:
-                self.vel[:4] = 0.0
+            for i in range(4):
+                if abs(self.vel[i]) > 15.0:
+                    self.vel[i] -= 1.0 * np.sign(self.vel[i])
+                elif 5.0 < abs(self.vel[i]) <= 15.0:
+                    self.vel[i] -= 0.25 * self.vel[i]
+                else:
+                    self.vel[i] = 0.0
 
+        # Gradually move axles to target positions
         for i in range(4):
-            target_delta = self.target_pos[i] - self.pos[i]
+            target = self.target_pos[i] if self.target_pos[i] is not None else 0.0
+            target_delta = target - self.pos[i]
             if abs(target_delta) > self.max_angle_step:
-                    self.pos[i] += self.axle_adjustment_speed * np.sign(target_delta)
+                self.pos[i] += self.axle_adjustment_speed * np.sign(target_delta)
             else:
-                self.pos[i] = self.target_pos[i]
+                self.pos[i] = target
+            time.sleep(0.005)
 
         # Publish wheel positions and velocities
         pos_array = Float64MultiArray(data=self.pos)
@@ -133,16 +137,18 @@ class MarineroControl(Node):
         self.distance_from_goal = math.sqrt(dx**2 + dy**2)
         g_q = self.goal_orientation
         r_q = self.orientation
-        self.goal_euler = euler_from_quaternion([g_q.x, g_q.y, g_q.z, g_q.w])
-        self.robot_euler = euler_from_quaternion([r_q.x, r_q.y, r_q.z, r_q.w])
-        self.angle_to_goal = self.goal_euler[2] - self.robot_euler[2] 
 
-        if abs(self.angle_to_goal) < 0.25 and abs(self.distance_from_goal) < 0.5:
-            vel_msg.linear.y = math.copysign(0.1, self.angle_to_goal) if self.angle_to_goal != 0 else 0.0
-            vel_msg.linear.y *= - self.scale_linear_y
+        goal_yaw = euler_from_quaternion([g_q.x, g_q.y, g_q.z, g_q.w])[2]
+        robot_yaw = euler_from_quaternion([r_q.x, r_q.y, r_q.z, r_q.w])[2]
+        yaw_error = math.atan2(math.sin(goal_yaw - robot_yaw), math.cos(goal_yaw - robot_yaw))
+
+        vel_msg.linear.y = math.copysign(0.1, yaw_error) if yaw_error != 0 else 0.0
+        vel_msg.linear.y *= - self.scale_linear_y
+
+        if abs(yaw_error) < 0.25 and self.distance_from_goal < 0.25:
             self.in_phase_steering(vel_msg)
 
-        elif 0.0 < self.distance_from_goal < 0.25 or (nav_vel_x > 0.0 and abs(nav_vel_x) > abs(nav_vel_z)):
+        elif 0.25 < self.distance_from_goal < 0.5 or (nav_vel_x > 0.0 and abs(nav_vel_x) > abs(nav_vel_z)):
             self.opposite_phase_steering(vel_msg)
 
         elif nav_vel_x > 0.2 and abs(nav_vel_x - abs(nav_vel_z)) < 0.35 and self.distance_from_goal > 2.0:
@@ -150,15 +156,15 @@ class MarineroControl(Node):
 
         else:
             if nav_vel_z > 0.0 or abs(nav_vel_z) < 0.05:
-                vel_msg.angular.z = max(math.copysign(0.2, nav_vel_z), nav_vel_z) * self.scale_angular_z
+                vel_msg.angular.z = max(math.copysign(0.2*abs(yaw_error), nav_vel_z), nav_vel_z) * self.scale_angular_z
             else:
-                vel_msg.angular.z = min(math.copysign(0.2, nav_vel_z), nav_vel_z) * self.scale_angular_z
+                vel_msg.angular.z = min(math.copysign(0.2*abs(yaw_error), nav_vel_z), nav_vel_z) * self.scale_angular_z
             self.pivot_turn(vel_msg)
 
         ### Debugging output
-        # self.get_logger().info(f"Distance from goal: {self.distance_from_goal:.2f}, Angle to goal: {self.angle_to_goal:.2f}")
+        # self.get_logger().info(f"Distance from goal: {self.distance_from_goal:.2f}, Yaw error: {yaw_error:.2f}")
         # self.get_logger().info(f"Linear X: {vel_msg.linear.x:.2f}, Linear Y: {vel_msg.linear.y:.2f}, Angular Z: {vel_msg.angular.z:.2f}")
-        # print(f"Distance from goal: {self.distance_from_goal:.2f}, Angle to goal: {self.angle_to_goal:.2f}")
+        # print(f"Distance from goal: {self.distance_from_goal:.2f}, Yaw error: {yaw_error:.2f}")
         # print(f"Linear X: {vel_msg.linear.x:.2f}, Linear Y: {vel_msg.linear.y:.2f}, Angular Z: {vel_msg.angular.z:.2f}")
 
 
@@ -193,7 +199,11 @@ class MarineroControl(Node):
         else:
             axle_angle = 0.0
 
-        V = math.hypot(vel_msg.linear.x, vel_msg.linear.y)
+        if self.mode_selection == 4:
+            V = max(min(math.hypot(vel_msg.linear.x, vel_msg.linear.y), 1.0), -1.0)
+        else:
+            V = math.hypot(vel_msg.linear.x, vel_msg.linear.y)
+
         self.pos[:4] = axle_angle
         self.vel[:] = sign_x * V
 
