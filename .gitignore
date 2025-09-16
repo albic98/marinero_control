@@ -1,2 +1,6 @@
 marinero_control/__pycache__/
 .vscode/
+marinero_control/marinero_camera_w_joy.py
+marinero_control/marinero_camera_w_keyboard.py
+marinero_control/marinero_camera.py
+marinero_control/marinero_odometry_old_model.py

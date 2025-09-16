@@ -1,49 +1,88 @@
 
-# Project title
+# MARINERO Control
 
-Marinero digital twin description files, controllers and localization logic
-## Getting started
+This package contains odometry, joystick control, and autonomy logic for the **MARINERO** robot.  
+It integrates with the MPPI navigator, path planner, YOLO object detection, and provides markers for localization in RViz and Gazebo.  
 
-After cloning extract files `robot_description/meshes.zip`.
+---
+
+## Requirements  
+
+- **ROS 2 Humble** (or compatible ROS 2 distribution)  
+- Packages:  
+  - `ros2_control`  
+  - `twist_mux`  
+  - `joy`  
+  - `teleop_twist_joy`
+  - `nav2_mppi_controller` (optional, for MPPI-based navigation)  
+  - `nav2_planner` (optional, for path planning) 
+
+---
+
+## Installation
+
+Clone the repository in your ROS2 workspace.
 
 ```
-  unzip robot_description/meshes.zip
+  cd workspace_folder/src
+  git clone https://github.com/albic98/marinero_control.git
 ```
 
-If you do not have `unzip` installed use
+Then build the workspace in your `workspace_folder`.
 
 ```
-  sudo apt-get install unzip
+  source /opt/ros/<distro>/setup.bash
+  colcon build --symlink-install
+  source install/setup.bash
 ```
-to install it.
 
-## Support
-
-One `MARINERO_chassis.stl` and one `MARINERO_chassis.dae` file is missing from the repository because they are too large for Github. To access, them write an e-mail to the email written below.
-
-For support, email albert.androsic@fsb.unizg.hr.
-
+---
 
 ## Usage/Examples
 
-Start the robot state publisher for MARINERO:
-
+#### Visualize location markers in RViZ and Gazebo:
 ```
-  ros2 launch marinero_simulations rsp.launch.py
-```
-
-Initiate the entire simulation using this command (4WIS4WID controller) with `ros2_control.xacro`:
-```
-  ros2 launch marinero_simulations gazebo_simulation.launch.py
+  ros2 run marinero_control marinero_tracker
+  ros2 run marinero_control gazebo_marker
 ```
 
-Launch command for controllers if they do not start with previous command:
+#### Start the robot odometry:
 ```
-  ros2 launch marinero_simulations controllers.launch.py
-```
-
-Initiate the entire simulation using this command (2 differential drive controller) with `gazebo_control.xacro`:
-```
-  ros2 launch marinero_simulations gazebo_simulation.launch.py use_ros2_control:=false use_4wis4wid:=false
+  ros2 run marinero_control marinero_odometry_new_model
 ```
 
+#### Enable joystick control:
+```
+  ros2 run marinero_control marinero_teleop
+```
+
+#### Start robot control logic with autonomy:
+```
+  ros2 run marinero_control marinero_control_with_autonomy
+```
+
+#### Run YOLO network for object detection:
+```
+  ros2 run marinero_control marinero_yolo
+```
+
+---
+
+## Support
+
+For support, email albert.androsic@fsb.unizg.hr.
+
+---
+
+## Connection to the MARINERO simulations repository
+
+The following nodes from this package:
+  - `marinero_control_with_autonomy`
+  - `marinero_odometry_new_model`
+  - `marinero_yolo`
+  - `gazebo_marker`
+  - `marinero_tracker`
+  - `marinero_teleop` 
+
+  are automatically launched via
+`_4wis4wid_drive_joystick.launch.py` and `gazebo_simulation.launch.py` in the [marinero_simulations](https://github.com/albic98/marinero_simulations) package. This means they are included automatically when running the full simulation.
