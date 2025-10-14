@@ -127,7 +127,7 @@ class MarineroMarker(Node):
 
 
         point1 = Point(x=self.position[0], y=self.position[1], z=8.75)
-        point2 = Point(x=self.position[0], y=self.position[1], z=10.0)
+        point2 = Point(x=self.position[0], y=self.position[1], z=5.0)
         point3 = Point(x=self.position[0], y=self.position[1], z=15.0)
 
         self.marker_line.pose.position = point1

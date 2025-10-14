@@ -58,7 +58,7 @@ Then build the workspace in your `workspace_folder`.
 
 #### Start robot control logic with autonomy:
 ```
-  ros2 run marinero_control marinero_control_with_autonomy
+  ros2 run marinero_control marinero_control_navigator
 ```
 
 #### Run YOLO network for object detection:
@@ -77,7 +77,7 @@ For support, email albert.androsic@fsb.unizg.hr.
 ## Connection to the MARINERO simulations repository
 
 The following nodes from this package:
-  - `marinero_control_with_autonomy`
+  - `marinero_control_navigator`
   - `marinero_odometry_new_model`
   - `marinero_yolo`
   - `gazebo_marker`

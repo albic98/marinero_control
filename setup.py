@@ -25,7 +25,7 @@ setup(
             'gazebo_marker = marinero_control.gazebo_marker:main',
             'docking_station = marinero_control.docking_station:main',
             'marinero_teleop = marinero_control.marinero_teleop:main',
-            'marinero_control_with_autonomy = marinero_control.marinero_control_with_autonomy:main',
+            'marinero_control_navigator = marinero_control.marinero_control_navigator:main',
             'marinero_yolo = marinero_control.marinero_yolo:main',
             'marinero_odometry_old_model = marinero_control.marinero_odometry_old_model:main',
             'marinero_odometry_new_model = marinero_control.marinero_odometry_new_model:main',
