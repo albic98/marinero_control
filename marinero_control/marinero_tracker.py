@@ -29,6 +29,9 @@ class MarineroMarker(Node):
 
         # Counter for throttling publishing
         self.counter = 0
+        
+        self.create_timer(0.05, self.publish_markers)
+
 
     def location_callback(self, msg):
         self.position = (msg.pose.pose.position.x, msg.pose.pose.position.y)
@@ -42,7 +45,7 @@ class MarineroMarker(Node):
         self.pose.pose.position.z = self.height
         self.pose.pose.orientation = self.orientation
 
-        self.publish_markers() # Publish markers for visualization in RViz
+        # self.publish_markers() # Publish markers for visualization in RViz
 
     def create_marker_line(self, point1, point2):
         marker_line = Marker()
