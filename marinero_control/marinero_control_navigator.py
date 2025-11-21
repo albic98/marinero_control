@@ -199,14 +199,12 @@ class MarineroControl(Node):
             if self.waypoints and self.current_idx < len(self.waypoints):
                 self.get_logger().info(f"Reached waypoint {self.current_idx}")
                 self.current_idx += 1
-                self.goal_active = False
-                self.boat_searching = True
             else:
                 self.get_logger().info("Reached 2D Goal Pose")
                 goal_reached_msg = Float64MultiArray()
                 goal_reached_msg.data = [self.position.x, self.position.y]
-                self.goal_active = False
-                self.boat_searching = True
+            self.goal_active = False
+            self.boat_searching = True
             self.boat_box_center = self.image_center
             self.photo_take_publisher.publish(Bool(data=(self.boat_searching)))
 

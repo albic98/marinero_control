@@ -71,10 +71,7 @@ class Camera(Node):
         condition_0 = self.axis_flag.axes[6] != 0
         condition_1 = self.axis_flag.axes[7] != 0
         
-        if condition_0 or condition_1:
-            self.camera_pose_publisher.publish(msg)
-            self.counter = 0.0
-        elif self.counter > 30.0:
+        if condition_0 or condition_1 or self.counter > 30.0:
             self.camera_pose_publisher.publish(msg)
             self.counter = 0.0
         else:

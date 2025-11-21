@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-
-import sys
 import rclpy
 import math
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
@@ -24,7 +22,7 @@ class Camera(Node):
         )
         self.keyboard_listener.start()
 
-    def on_press(self, key):
+    def on_press(self, key):  # sourcery skip: use-contextlib-suppress
         try:
             if key.char == '4': # key == keyboard.Key.left:
                 self.adjust_joint("cam_base", -0.15)

@@ -33,6 +33,7 @@ class OdometryPublisher(Node):
         self.wheel_velocities = np.array(msg.data)
 
     def odometry_callback(self, msg):
+        # sourcery skip: extract-duplicate-method, move-assign-in-block
         current_time = msg.header.stamp  # Use a single timestamp for all transforms
         current_rcl_time = self.get_clock().now()
         odom_to_base_link = TransformStamped()
