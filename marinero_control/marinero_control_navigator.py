@@ -113,7 +113,7 @@ class MarineroControl(Node):
         self.prev_time = self.get_clock().now()
 
 
-    def odom_callback(self, msg):
+    def odom_callback(self, msg):  # sourcery skip: extract-method
         self.position = msg.pose.pose.position
         self.orientation = msg.pose.pose.orientation
 
@@ -190,7 +190,7 @@ class MarineroControl(Node):
     def capture_photo(self):
         timestamp = datetime.now().strftime("%H%M%S")
         filename = os.path.join(photo_path, f"photo_{timestamp}.png")
-        cv2.imwrite(filename, self.last_frame)
+        cv2.imwrite(filename, self.last_frame)                          # type: ignore
         # self.get_logger().info(f"Photo saved: {filename}")
 
 
