@@ -44,10 +44,10 @@ class MarkerSpawner(Node):
         marker_request.name = self.marker_name
         marker_request.xml = self.sdf_content
         marker_request.robot_namespace = "marinero"
-        marker_request.initial_pose.position.x = self.robot_pose.pose.pose.position.x
-        marker_request.initial_pose.position.y = self.robot_pose.pose.pose.position.y
+        marker_request.initial_pose.position.x = self.robot_pose.pose.pose.position.x   # type: ignore
+        marker_request.initial_pose.position.y = self.robot_pose.pose.pose.position.y   # type: ignore
         marker_request.initial_pose.position.z = self.marker_height
-        marker_request.initial_pose.orientation = self.robot_pose.pose.pose.orientation
+        marker_request.initial_pose.orientation = self.robot_pose.pose.pose.orientation # type: ignore
 
         future = self.marker_client.call_async(marker_request)
         future.add_done_callback(self.spawn_marker_response_callback)
@@ -66,6 +66,7 @@ class MarkerSpawner(Node):
             self.marker_spawn_in_progress = False
             
     def odom_callback(self, msg: Odometry):
+        # sourcery skip: merge-else-if-into-elif, swap-if-else-branches
         self.robot_pose = msg
 
         if not self.marker_spawned:
@@ -77,10 +78,10 @@ class MarkerSpawner(Node):
     def update_marker_position(self):
         marker_state = EntityState()
         marker_state.name = self.marker_name
-        marker_state.pose.position.x = self.robot_pose.pose.pose.position.x
-        marker_state.pose.position.y = self.robot_pose.pose.pose.position.y
+        marker_state.pose.position.x = self.robot_pose.pose.pose.position.x     # type: ignore
+        marker_state.pose.position.y = self.robot_pose.pose.pose.position.y     # type: ignore
         marker_state.pose.position.z = self.marker_height
-        marker_state.pose.orientation = self.robot_pose.pose.pose.orientation
+        marker_state.pose.orientation = self.robot_pose.pose.pose.orientation   # type: ignore
 
 
         state_request = SetEntityState.Request()

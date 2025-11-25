@@ -86,7 +86,7 @@ These scripts belong to older versions of the MARINERO system and are no longer 
 
 ## Support
 
-For support, email albert.androsic@fsb.unizg.hr.
+For support, go to https://github.com/CRTA-Lab/marinero_stack.
 
 ---
 

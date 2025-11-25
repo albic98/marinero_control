@@ -4,7 +4,6 @@ import cv2
 import time
 import rclpy
 import math
-from datetime import datetime
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
@@ -16,7 +15,7 @@ from std_msgs.msg import Float64MultiArray, Bool
 logging.getLogger("ultralytics").setLevel(logging.WARNING)
 
 class ImageProcessing(Node):
-    def __init__(self):
+    def __init__(self):  # sourcery skip: for-append-to-extend
         super().__init__("imageprocessing")
         self.image_subscriber = self.create_subscription(Image, "/right_depth_camera/image_raw", self.image_callback, 10)
         self.boat_searching_subscriber = self.create_subscription(Bool, "/boat_searching", self.boat_searching_callback, 10)
@@ -43,14 +42,14 @@ class ImageProcessing(Node):
         self.min_detected_frames = 5
         
         # self.model = YOLO("yolov8x.pt")  # load a pretrained model (recommended for training)
-        for id, name in self.model.names.items():
+        for id, name in self.model.names.items(): # type: ignore
             if name in self.classes_to_detect:
                 self.classes.append(id)
 
     def boat_searching_callback(self, msg):
         self.boat_searching = bool(msg.data)
 
-    def image_callback(self, msg):
+    def image_callback(self, msg):  # sourcery skip: low-code-quality
         self.frame = self.br.imgmsg_to_cv2(msg)
         ret = True
         if not ret:
@@ -73,8 +72,8 @@ class ImageProcessing(Node):
             # result.show()
             # result.save(filename="result.jpg")  # save to disk
             
-            for box in boxes:
-                x, y, w, h = box.xywh[0][0:4]
+            for box in boxes:                   # type: ignore
+                x, y, w, h = box.xywh[0][:4]  
                 class_id = int(box.cls[0])
                 confidence = float(box.conf[0])
                 class_name = self.model.names[class_id]
