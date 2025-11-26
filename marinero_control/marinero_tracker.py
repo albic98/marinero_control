@@ -125,7 +125,7 @@ class MarineroMarker(Node):
 
         marker_array = MarkerArray()
 
-        point1 = Point(x=self.position[0], y=self.position[1], z=2.0)
+        point1 = Point(x=self.position[0], y=self.position[1], z=1.0)
         point2 = Point(x=self.position[0], y=self.position[1], z=15.0)
         point3 = Point(x=self.position[0], y=self.position[1], z=20.0)
 

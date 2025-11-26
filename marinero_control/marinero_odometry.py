@@ -110,11 +110,7 @@ class OdometryPublisher(Node):
             transforms.append(transform)
 
         self.transforms = transforms
-
-    def odometry_broadcaster(self):
-        # Broadcast all transforms at once
-        for transform in self.transforms:
-            self.tf_broadcaster.sendTransform(transform)
+        self.tf_broadcaster.sendTransform(transform)
 
 
 def main(args=None):
