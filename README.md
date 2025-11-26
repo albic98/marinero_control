@@ -86,7 +86,15 @@ These scripts belong to older versions of the MARINERO system and are no longer 
 
 ## Support
 
-For support, go to https://github.com/CRTA-Lab/marinero_stack.
+YOLO model also has not been uploaded on GitHub so you have to manually add it to yor `workspace_folder`.
+
+The one currently used is `yolov8s_marinaPunat.pt`.
+
+You can download it from the repository linked below.
+
+After downloading, place the file in your `workspace_folder` to ensure the system runs correctly.
+
+For additional support, go to https://github.com/CRTA-Lab/marinero_stack.
 
 ---
 
